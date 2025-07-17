@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Αναζήτηση Παραλίας</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100vw;
+      z-index: 0;
+    }
+
+    .search-bar-container {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .search-bar {
+      width: 550px;
+      height: 45px;
+      background: white;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      position: relative;
+    }
+
+    .search-bar:hover {
+      background-color: #f0f0f0;
+    }
+
+    .search-bar i {
+      color: gray;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .clear-button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: gray;
+    }
+
+    .autocomplete-results {
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border-radius: 12px;
+      position: absolute;
+      top: 50px;
+      width: 550px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1001;
+    }
+
+    .autocomplete-item {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="search-bar-container">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" id="search" placeholder="Π.χ. ΘΕΡΜΑΙΚΟΣ">
+      <button class="clear-button" onclick="clearSearch()">&times;</button>
+    </div>
+    <div class="autocomplete-results" id="suggestions"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="beaches.js"></script>
+
+  <script>
+    const map = L.map('map').setView([40.64, 22.94], 9);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const searchInput = document.getElementById("search");
+    const suggestionsDiv = document.getElementById("suggestions");
+
+    searchInput.addEventListener("input", () => {
+      map.setView([40.64, 22.94], 9, { animate: true, duration: 1 });
+      const value = searchInput.value.toLowerCase().trim();
+      suggestionsDiv.innerHTML = "";
+
+      if (value.length < 2) return;
+
+      const matches = beaches.filter(beach =>
+        beach.name.toLowerCase().includes(value)
+      );
+
+      matches.forEach(beach => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.textContent = beach.name;
+        div.onclick = () => {
+          searchInput.value = beach.name;
+          suggestionsDiv.innerHTML = "";
+          map.setView([beach.lat, beach.lon], 14);
+          L.popup().setLatLng([beach.lat, beach.lon]).setContent(`<strong>${beach.name}</strong>`).openOn(map);
+        };
+        suggestionsDiv.appendChild(div);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".search-bar-container").contains(e.target)) {
+        suggestionsDiv.innerHTML = "";
+      }
+    });
+
+    function clearSearch() {
+      searchInput.value = "";
+      suggestionsDiv.innerHTML = "";
+      searchInput.focus();
+    }
+  </script>
+</body>
+</html>

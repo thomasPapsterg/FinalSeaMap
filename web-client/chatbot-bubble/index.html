@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chatbot Παραλιών</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    #chatButton {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: transparent;
+      border: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      padding: 0;
+      z-index: 1000;
+    }
+    #chatButton img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    #chatWindow {
+      position: fixed;
+      bottom: 0;
+      left: 20px;
+      width: 320px;
+      height: 400px;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 0;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+      transition: opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+    }
+    #chatWindow.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #chatHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+    #chatControls button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+    #chatControls button:hover {
+      color: #ddd;
+    }
+    #chatHistory {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      font-size: 14px;
+      background-color: #f9f9f9;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+    }
+    #userInput {
+      display: flex;
+      gap: 5px;
+      padding: 10px;
+    }
+    #userInput input {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    #userInput button {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    #userInput button:hover {
+      background-color: #eee;
+    }
+    #chatWindow.maximized {
+      width: 100%;
+      height: 100%;
+      bottom: 0;
+      left: 0;
+      border-radius: 0;
+    }
+    #chatWindow.minimized #chatHistory,
+    #chatWindow.minimized #userInput {
+      display: none;
+    }
+    #chatWindow.minimized {
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="chatButton" onclick="toggleChat()" aria-label="Άνοιγμα Chatbot">
+    <img src="buble.jpg" alt="Chatbot" />
+  </button>
+
+  <div id="chatWindow">
+    <div id="chatHeader">
+      Chatbot
+      <div id="chatControls">
+        <button onclick="minimizeChat()">–</button>
+        <button onclick="maximizeChat()">⬜</button>
+        <button onclick="closeChat()">×</button>
+      </div>
+    </div>
+
+    <div id="chatHistory"></div>
+
+    <div id="userInput">
+      <input type="text" id="inputField" placeholder="Πληκτρολόγησε εδώ..." />
+      <button onclick="sendMessage()">Αποστολή</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleChat() {
+      const chatWindow = document.getElementById("chatWindow");
+      const chatHistory = document.getElementById("chatHistory");
+      const chatButton = document.getElementById("chatButton");
+
+      const isOpen = chatWindow.classList.contains("active");
+
+      if (!isOpen) {
+        chatWindow.classList.add("active");
+        chatWindow.classList.remove("minimized", "maximized");
+        chatButton.style.display = "none";
+        if (chatHistory.innerHTML.trim() === "") {
+          appendToHistory("Bot", "Καλωσήρθες! Πώς μπορώ να βοηθήσω;");
+        }
+      }
+    }
+
+    function closeChat() {
+      document.getElementById("chatWindow").classList.remove("active", "minimized", "maximized");
+      document.getElementById("chatButton").style.display = "block";
+    }
+
+    function minimizeChat() {
+      document.getElementById("chatWindow").classList.toggle("minimized");
+    }
+
+    function maximizeChat() {
+      document.getElementById("chatWindow").classList.toggle("maximized");
+    }
+
+    function appendToHistory(sender, text) {
+      const history = document.getElementById("chatHistory");
+      const entry = document.createElement("div");
+      entry.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      history.appendChild(entry);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("inputField");
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendToHistory("Εσύ", message);
+      input.value = "";
+
+      const greetings = ["γεια", "γεια σου", "καλησπέρα", "καλημέρα", "χαιρετώ", "γειά", "hello", "hi"];
+      if (greetings.some(g => message.toLowerCase().includes(g))) {
+        appendToHistory("Bot", "Γεια σου! Πώς μπορώ να σε εξυπηρετήσω;");
+        return;
+      }
+
+      if (
+        message.toLowerCase().includes("καλύτερες παραλίες") ||
+        message.toLowerCase().includes("καθαρότερες παραλίες") ||
+        message.toLowerCase().includes("πρότεινε παραλίες")
+      ) {
+        recommendBeaches();
+        return;
+      }
+
+      let bwidMatch = message.match(/ELBW\d{12}/);
+      let bwid = null;
+
+      if (bwidMatch) {
+        bwid = bwidMatch[0];
+      } else {
+        const words = message.toLowerCase().split(/\s+/);
+        for (const word of words) {
+          try {
+            const res = await fetch(`http://127.0.0.1:5001/get_bwid?name=${encodeURIComponent(word)}`);
+            const data = await res.json();
+            if (data.bwid) {
+              bwid = data.bwid;
+              break;
+            }
+          } catch (err) {
+            console.error("Σφάλμα στο get_bwid", err);
+          }
+        }
+      }
+
+      if (bwid) {
+        appendToHistory("Bot", `Αναζήτηση στοιχείων για την παραλία ${bwid}...`);
+        try {
+          const res = await fetch(`http://127.0.0.1:5001/get_data?bwid=${bwid}`);
+          const data = await res.json();
+
+          if (data.error) {
+            appendToHistory("Bot", data.error);
+          } else {
+            let response = `
+              <b>Στοιχεία για <u>${bwid}</u>:</b><br>
+              ➤ conc_ec: ${data.conc_ec}<br>
+              ➤ conc_ie: ${data.conc_ie}<br>
+              ➤ Διεύθυνση ανέμου: ${data.wind_direction}<br>
+              ➤ Άλλοι ρύποι: ${data.other_pollution}<br>
+              ➤ Πίσσα: ${data.tar_residue}<br>
+              ➤ Γυαλιά: ${data.glasses}<br>
+              ➤ Πλαστικά: ${data.plastics}<br>
+              ➤ Καουτσούκ: ${data.rubber}<br>
+              ➤ Άλλα απόβλητα: ${data.other_waste}<br>
+              ➤ Φύκη: ${data.presence_of_algae}<br>
+              ➤ Λάδι: ${data.presence_of_oil}`;
+              response += `<br><i>📅 Τα δεδομένα αφορούν το έτος 2023.</i>`;
+            appendToHistory("Bot", response);
+          }
+        } catch (err) {
+          appendToHistory("Bot", "Σφάλμα σύνδεσης με τον server.");
+        }
+      } else {
+        appendToHistory("Bot", "Δεν βρήκα στοιχεία για την παραλία που ανέφερες. Δοκίμασε διαφορετική διατύπωση.");
+      }
+    }
+
+    async function recommendBeaches() {
+      appendToHistory("Bot", "Αναζήτηση των καθαρότερων παραλιών...");
+      try {
+        const res = await fetch("http://127.0.0.1:5001/get_best_beaches");
+        const beaches = await res.json();
+
+        if (beaches.length === 0) {
+          appendToHistory("Bot", "Δεν βρέθηκαν παραλίες με επαρκή δεδομένα.");
+        } else {
+          let response = "<b>Οι 5 καθαρότερες παραλίες:</b><br>";
+          beaches.forEach((b, i) => {
+            response += `🌊 <b>${i + 1}.</b> ${b.name} <i>(EC: ${b.conc_ec}, IE: ${b.conc_ie})</i><br>`;
+          });
+          response += `<br><i>📅 Τα δεδομένα αφορούν το έτος 2023.</i>`;
+          appendToHistory("Bot", response);
+        }
+      } catch (error) {
+        appendToHistory("Bot", "Σφάλμα κατά την ανάκτηση προτάσεων.");
+        console.error("Σφάλμα:", error);
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+

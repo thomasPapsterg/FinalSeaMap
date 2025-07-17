@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"name": "nikelio_heatmap",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "onoma_simeiou": "Μεταξύ 5ης ΚΑΙ 6ης Προβλήτας ", "imerominia": "2024-07-24", "nero_id": 1, "bario_ba": "20", "kadmio_cd": "< 20", "kobaltio_co": "< 20", "xromio_cr": "< 20", "xalkos_cu": "< 20", "magganio_mn": "< 20", "nikelio_ni": "< 20", "molyvdos_pb": "< 20", "pseydargyros_zn": "93,3", "ydrogonanthrakes_c10_c40": "< 100", "arseniko_as": "< 20" }, "geometry": { "type": "Point", "coordinates": [ 22.91667, 40.63333 ] } },
+{ "type": "Feature", "properties": { "onoma_simeiou": "Μεταξύ 1ης ΚΑΙ 2ης Προβλήτας", "imerominia": "2024-07-24", "nero_id": 3, "bario_ba": "< 20", "kadmio_cd": "< 20", "kobaltio_co": "< 20", "xromio_cr": "< 20", "xalkos_cu": "< 20", "magganio_mn": "< 20", "nikelio_ni": "<20", "molyvdos_pb": "< 20", "pseydargyros_zn": "117,3", "ydrogonanthrakes_c10_c40": "< 100", "arseniko_as": "< 20" }, "geometry": { "type": "Point", "coordinates": [ 22.932222, 40.633416 ] } },
+{ "type": "Feature", "properties": { "onoma_simeiou": "Εκτός Λιμενολεκάνης στο ύψος του κέντρου του κυματοθραύστη ", "imerominia": "2024-07-24", "nero_id": 4, "bario_ba": "209,5", "kadmio_cd": "< 20", "kobaltio_co": "< 20", "xromio_cr": "< 20", "xalkos_cu": "< 20", "magganio_mn": "< 20", "nikelio_ni": "66,8", "molyvdos_pb": "< 20", "pseydargyros_zn": "141,8", "ydrogonanthrakes_c10_c40": "< 100", "arseniko_as": "< 20" }, "geometry": { "type": "Point", "coordinates": [ 22.9275, 40.628334 ] } },
+{ "type": "Feature", "properties": { "onoma_simeiou": "3η Προβλήτα – Μπροστά από 13ο Κρηπίδωμα", "imerominia": "2024-07-24", "nero_id": 2, "bario_ba": "< 20", "kadmio_cd": "< 20", "kobaltio_co": "< 20", "xromio_cr": "< 20", "xalkos_cu": "< 20", "magganio_mn": "< 20", "nikelio_ni": "< 20", "molyvdos_pb": "< 20", "pseydargyros_zn": "93,5", "ydrogonanthrakes_c10_c40": "< 100", "arseniko_as": "< 20" }, "geometry": { "type": "Point", "coordinates": [ 22.923889, 40.633611 ] } }
+]
+}

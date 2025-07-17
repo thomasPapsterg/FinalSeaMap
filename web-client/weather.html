@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Καιρός Δήμων Θεσσαλονίκης</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg-light: #e0eafc;
+      --bg-dark: #121212;
+      --card-light: #ffffff;
+      --card-dark: #1e1e1e;
+      --text-light: #333;
+      --text-dark: #f0f0f0;
+      --accent: #0077b6;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 2.2em;
+      color: var(--accent);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background-color: var(--accent);
+      margin: 8px auto 0 auto;
+      border-radius: 2px;
+    }
+
+    #localTime, #lastUpdate {
+      text-align: center;
+      font-size: 0.9em;
+      color: gray;
+      margin-bottom: 10px;
+    }
+
+    .toggle-mode {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .toggle-mode button {
+      padding: 8px 20px;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    .toggle-mode button i {
+      margin-right: 8px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .card {
+      background-color: var(--card-light);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      padding: 20px;
+      width: 250px;
+      height: 220px;
+      text-align: center;
+      position: relative;
+      transition: transform 0.3s, background-color 0.3s, color 0.3s;
+      overflow: hidden;
+    }
+
+    body.dark .card {
+      background-color: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3,
+    .card .icon,
+    .card .temp,
+    .card .desc {
+      transition: opacity 0.3s;
+    }
+
+    .card:hover h3,
+    .card:hover .icon,
+    .card:hover .temp,
+    .card:hover .desc {
+      opacity: 0;
+    }
+
+    .card .icon {
+      font-size: 36px;
+      margin-bottom: 5px;
+    }
+
+    .desc {
+      text-transform: capitalize;
+      font-size: 0.95em;
+      color: gray;
+    }
+
+    .card .details {
+      opacity: 0;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      font-size: 1.05em;
+      font-weight: bold;
+      transition: opacity 0.3s;
+      line-height: 1.6em;
+      text-align: left;
+    }
+
+    .card:hover .details {
+      opacity: 1;
+    }
+
+    .card .details i {
+      margin-right: 6px;
+      color: inherit;
+    }
+
+    a.back {
+      display: block;
+      text-align: center;
+      margin-top: 40px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a.back:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Live θερμοκρασία σε κάθε Δήμο Θεσσαλονίκης</h2>
+  <div id="localTime">Τοπική ώρα: —:—</div>
+  <div id="lastUpdate">Τελευταία ενημέρωση: —</div>
+
+  <div class="toggle-mode">
+    <button id="modeToggle" onclick="toggleDarkMode()">
+      <i class="fas fa-moon" id="modeIcon"></i> Dark Mode
+    </button>
+  </div>
+
+  <div class="container" id="weatherContainer">Φόρτωση...</div>
+  <a href="map.html" class="back">⬅ Επιστροφή στην αρχική</a>
+
+  <script>
+    const apiKey = "99f240a8293d62c1e5cb8aa8c88b054a";
+
+    const municipalities = [
+      { name: "Θεσσαλονίκης", lat: 40.6401, lon: 22.9444 },
+      { name: "Αμπελοκήπων-Μενεμένης", lat: 40.6451, lon: 22.9283 },
+      { name: "Δέλτα", lat: 40.6717, lon: 22.7170 },
+      { name: "Καλαμαριάς", lat: 40.5820, lon: 22.9540 },
+      { name: "Κορδελιού-Ευόσμου", lat: 40.6699, lon: 22.9000 },
+      { name: "Λαγκαδά", lat: 40.7515, lon: 23.0607 },
+      { name: "Νεάπολης-Συκεών", lat: 40.6512, lon: 22.9447 },
+      { name: "Παύλου Μελά", lat: 40.6756, lon: 22.9178 },
+      { name: "Πυλαίας-Χορτιάτη", lat: 40.5883, lon: 23.0436 },
+      { name: "Θέρμης", lat: 40.5469, lon: 23.0198 },
+      { name: "Ωραιοκάστρου", lat: 40.7209, lon: 22.9196 },
+      { name: "Χαλκηδόνος", lat: 40.6982, lon: 22.6465 },
+      { name: "Βόλβης", lat: 40.6641, lon: 23.7109 },
+      { name: "Θερμαϊκού", lat: 40.5069, lon: 22.9274 }
+    ];
+
+    const icons = {
+      "01d": "fa-sun",
+      "01n": "fa-moon",
+      "02d": "fa-cloud-sun",
+      "02n": "fa-cloud-moon",
+      "03d": "fa-cloud",
+      "03n": "fa-cloud",
+      "04d": "fa-cloud",
+      "04n": "fa-cloud",
+      "09d": "fa-cloud-showers-heavy",
+      "09n": "fa-cloud-showers-heavy",
+      "10d": "fa-cloud-sun-rain",
+      "10n": "fa-cloud-moon-rain",
+      "11d": "fa-bolt",
+      "11n": "fa-bolt",
+      "13d": "fa-snowflake",
+      "13n": "fa-snowflake",
+      "50d": "fa-smog",
+      "50n": "fa-smog"
+    };
+
+    const container = document.getElementById("weatherContainer");
+    const updateText = document.getElementById("lastUpdate");
+
+    function loadWeather() {
+      container.innerHTML = "";
+      updateText.innerText = "Ενημέρωση σε εξέλιξη...";
+      let completed = 0;
+
+      municipalities.forEach(m => {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${m.lat}&lon=${m.lon}&appid=${apiKey}&units=metric&lang=el`;
+
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            const temp = data.main.temp.toFixed(1);
+            const desc = data.weather[0].description;
+            const iconCode = data.weather[0].icon;
+            const iconClass = icons[iconCode] || "fa-question";
+            const humidity = data.main.humidity;
+            const wind = data.wind.speed.toFixed(1);
+            const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <h3>${m.name}</h3>
+              <div class="icon"><i class="fas ${iconClass}"></i></div>
+              <div class="temp">${temp}°C</div>
+              <div class="desc">${desc}</div>
+              <div class="details">
+                <div><i class="fas fa-tint"></i> Υγρασία: ${humidity}%</div>
+                <div><i class="fas fa-wind"></i> Άνεμος: ${wind} m/s</div>
+                <div><i class="fas fa-sun"></i> Ανατολή ηλίου: ${sunrise}</div>
+                <div><i class="fas fa-moon"></i> Δύση ηλίου: ${sunset}</div>
+              </div>
+            `;
+            container.appendChild(card);
+          })
+          .catch(() => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <h3>${m.name}</h3>
+              <div class="temp">–</div>
+              <div class="desc">Σφάλμα</div>
+            `;
+            container.appendChild(card);
+          })
+          .finally(() => {
+            completed++;
+            if (completed === municipalities.length) {
+              const now = new Date();
+              const hours = String(now.getHours()).padStart(2, '0');
+              const minutes = String(now.getMinutes()).padStart(2, '0');
+              updateText.innerText = `Τελευταία ενημέρωση: ${hours}:${minutes}`;
+            }
+          });
+      });
+    }
+
+    function updateLocalTime() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("localTime").innerText = `Τοπική ώρα: ${hours}:${minutes}`;
+    }
+
+    function toggleDarkMode() {
+      const body = document.body;
+      const toggleBtn = document.getElementById("modeToggle");
+      const icon = document.getElementById("modeIcon");
+
+      body.classList.toggle("dark");
+      const isDark = body.classList.contains("dark");
+      localStorage.setItem("weatherMode", isDark ? "dark" : "light");
+
+      toggleBtn.innerText = isDark ? "Light Mode" : "Dark Mode";
+      toggleBtn.prepend(icon);
+      icon.className = isDark ? "fas fa-sun" : "fas fa-moon";
+    }
+
+    loadWeather();
+    updateLocalTime();
+    setInterval(loadWeather, 300000);
+    setInterval(updateLocalTime, 60000);
+
+    if (localStorage.getItem("weatherMode") === "dark") {
+      document.body.classList.add("dark");
+    }
+
+    const toggleBtn = document.getElementById("modeToggle");
+    const icon = document.getElementById("modeIcon");
+    const isDarkInit = document.body.classList.contains("dark");
+    toggleBtn.innerText = isDarkInit ? "Light Mode" : "Dark Mode";
+    toggleBtn.prepend(icon);
+    icon.className = isDarkInit ? "fas fa-sun" : "fas fa-moon";
+  </script>
+</body>
+</html>
+
