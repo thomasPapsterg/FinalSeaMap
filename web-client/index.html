@@ -4,111 +4,85 @@
   <meta charset="utf-8" />
   <title>Σημεία Παρακολούθησης</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
     #map { height: 100vh; width: 100%; }
-  </style>
-  <style>
-  #predict-panel {
-    position: fixed;
-    bottom: -100%;
-    left: 0;
-    width: 100%;
-    background: #f9f9f9;
-    border-top: 2px solid #ccc;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-    padding: 15px;
-    transition: bottom 0.3s ease-in-out;
-    z-index: 1000;
-  }
 
-  #predict-panel.open {
-    bottom: 0;
-  }
+    #layer-toggle-btn{
+      position: fixed;
+      top: 15px; right: 15px;
+      z-index:1100;
+      background:#1f2937; color:#fff;
+      border:none; border-radius:999px;
+      padding:8px 14px; font-size:14px; cursor:pointer;
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+    }
+    #layer-toggle-btn:hover{ filter:brightness(1.1); }
 
-  #open-panel-btn {
-    position: fixed;
-    bottom: 15px;
-    right: 15px;
-    z-index: 1100;
-    background: #0078d7;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+    #layer-panel{
+      position: absolute;
+      top: 60px; right: 15px;
+      width: 300px;
+      max-height: 72vh;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: 0 12px 30px rgba(0,0,0,.20);
+      border-radius: 14px;
+      padding: 12px;
+      display: none;
+      z-index: 1100;
+    }
+    #layer-panel::-webkit-scrollbar{ width:10px; }
+    #layer-panel::-webkit-scrollbar-thumb{
+      background:#e5e7eb; border-radius:10px; border:2px solid #fff;
+    }
+    #layer-panel h4{
+      position: sticky;
+      top: -12px;
+      margin: -12px -12px 10px;
+      padding: 12px;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .layer-row{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; padding:10px 4px; border-bottom:1px dashed rgba(0,0,0,.06);
+    }
+    .layer-row:last-child{ border-bottom:none; }
+    .layer-name{
+      font-size:14px; color:#1f2937; font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    .switch{
+      appearance:none; -webkit-appearance:none; -moz-appearance:none;
+      width:40px; height:22px; border-radius:999px; position:relative;
+      background:#e5e7eb; outline:none; cursor:pointer; transition:.2s;
+      border:1px solid rgba(0,0,0,.08);
+    }
+    .switch::after{
+      content:""; position:absolute; top:2px; left:2px;
+      width:18px; height:18px; border-radius:50%;
+      background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25);
+      transition:.2s;
+    }
+    .switch:checked{ background:#10b981; }
+    .switch:checked::after{ transform:translateX(18px); }
+    .switch:focus{ box-shadow:0 0 0 3px rgba(16,185,129,.25); }
 
-  #close-panel-btn {
-    float: right;
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #999;
-  }
-
-  label {
-    display: block;
-    margin-top: 8px;
-  }
-
-  input {
-    width: 100%;
-    padding: 5px;
-  }
-
-   #layer-toggle-btn {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 1100;
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  #layer-panel {
-    position: absolute;
-    top: 60px;
-    right: 15px;
-    width: 200px;
-    max-height: 70%;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #aaa;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    padding: 10px;
-    display: none;
-    z-index: 1100;
-  }
-
-  #layer-panel h4 {
-    margin-top: 0;
-  }
-
-  .layer-option {
-    margin-bottom: 5px;
-  }
-
-
-  /* css kommati gia to search bar */
-  body, html {
+    body, html {
       margin: 0;
       padding: 0;
       height: 100%;
       font-family: Arial, sans-serif;
     }
-
-    #map {
-      height: 100vh;
-      width: 100vw;
-      z-index: 0;
-    }
+    #map { height: 100vh; width: 100vw; z-index: 0; }
 
     .search-bar-container {
       position: absolute;
@@ -120,7 +94,6 @@
       flex-direction: column;
       align-items: center;
     }
-
     .search-bar {
       width: 550px;
       height: 45px;
@@ -135,63 +108,95 @@
       transition: background-color 0.3s;
       position: relative;
     }
-
-    .search-bar:hover {
-      background-color: #f0f0f0;
-    }
-
-    .search-bar i {
-      color: gray;
-      margin-right: 10px;
-      font-size: 16px;
-    }
-
+    .search-bar:hover { background-color: #f0f0f0; }
+    .search-bar i { color: gray; margin-right: 10px; font-size: 16px; }
     .search-bar input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 16px;
-      background: transparent;
+      flex: 1; border: none; outline: none; font-size: 16px; background: transparent;
     }
-
     .clear-button {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: gray;
+      background: none; border: none; font-size: 16px; cursor: pointer; color: gray;
     }
-
     .autocomplete-results {
-      background: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      border-radius: 12px;
-      position: absolute;
-      top: 50px;
-      width: 550px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 1001;
+      background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border-radius: 12px; position: absolute; top: 50px; width: 550px;
+      max-height: 200px; overflow-y: auto; z-index: 1001;
     }
+    .autocomplete-item { padding: 10px 16px; cursor: pointer; }
+    .autocomplete-item:hover { background-color: #f0f0f0; }
 
-    .autocomplete-item {
+    #predict-panel {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border-top: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 -18px 40px rgba(0,0,0,.25);
+      padding: 0;
+      transition: bottom .35s ease;
+      z-index: 1000;
+    }
+    #predict-panel.open { bottom: 0; }
+    #open-panel-btn{
+      position: fixed;
+      bottom: 16px; right: 16px;
+      z-index: 1100;
+      background: #111827;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
       padding: 10px 16px;
+      font-size: 14px;
       cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
     }
-
-    .autocomplete-item:hover {
-      background-color: #f0f0f0;
+    #open-panel-btn:hover{ filter: brightness(1.1); }
+    .predict-inner { max-width: 1100px; margin: 0 auto; padding: 16px 20px 22px; }
+    .predict-header {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 4px; background: #ffffff; border-bottom: 1px solid rgba(0,0,0,.06); z-index: 1;
     }
-    /*telos css search bar */
-
-  
-</style>
+    .predict-title {
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 16px; font-weight: 800; color: #111827;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #close-panel-btn {
+      background: transparent; border: none; font-size: 22px; cursor: pointer; color: #6b7280;
+      border-radius: 10px; padding: 4px 8px;
+    }
+    #close-panel-btn:hover { background: #f3f4f6; color: #111827; }
+    .predict-grid{
+      display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 12px 16px; margin-top: 14px;
+    }
+    @media (max-width: 1100px){ .predict-grid{ grid-template-columns: repeat(2, minmax(220px,1fr)); } }
+    @media (max-width: 680px){ .predict-grid{ grid-template-columns: 1fr; } }
+    .field { display: grid; grid-template-rows: auto 40px; gap: 6px; }
+    .field label {
+      font-size: 13px; color: #374151; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .input {
+      width: 100%; height: 40px; border: 1px solid rgba(0,0,0,.12); border-radius: 10px;
+      padding: 0 10px; font-size: 14px; outline: none; transition: box-shadow .15s ease, border-color .15s ease; background: #fff;
+    }
+    .input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.22); }
+    .actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .btn-primary {
+      background: #10b981; color: #fff; border: none; border-radius: 10px;
+      padding: 10px 14px; font-size: 14px; cursor: pointer; box-shadow: 0 8px 18px rgba(16,185,129,.35);
+    }
+    .btn-primary:hover { filter: brightness(1.05); }
+    .result { font-weight: 700; font-size: 14px; color: #065f46; }
+    .result.error { color: #b91c1c; }
+  </style>
 </head>
 <body>
 
   <div style="position: fixed; bottom: 10px; left: 10px; width: 400px; height: 600px; border: none; z-index: 1000;">
-  <iframe src="chatbot-bubble/index.html" style="width: 100%; height: 100%; border: none;"></iframe>
-</div>
+    <iframe src="chatbot-bubble/index.html" style="width: 100%; height: 100%; border: none;"></iframe>
+  </div>
 
   <div id="map"></div>
 
@@ -204,183 +209,221 @@
     <div class="autocomplete-results" id="suggestions"></div>
   </div>
 
-<button onclick="window.location.href = 'weather.html'" style="
-  position: fixed;
-  top: 15px;
-  left: 100px;
-  z-index: 1100;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  border-radius: 8px;
-  cursor: pointer;
-">
-  Δες Live Θερμοκρασία
-</button>
+  <button onclick="window.location.href = 'weather.html'" style="
+    position: fixed;
+    top: 15px;
+    left: 100px;
+    z-index: 1100;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  ">
+    Δες Live Θερμοκρασία
+  </button>
 
+  <button id="layer-toggle-btn" onclick="toggleLayerPanel()">🗺️ Υπόμνημα</button>
+  <div id="layer-panel">
+    <h4>📌 Επιλογή Επιστρώσεων</h4>
+    <div id="layer-options"></div>
+  </div>
 
-<button id="layer-toggle-btn" onclick="toggleLayerPanel()">🗺️ Υπόμνημα</button>
+  <button id="open-panel-btn" onclick="togglePanel()">🔍 Πρόβλεψη</button>
+  <div id="predict-panel">
+    <div class="predict-inner">
+      <div class="predict-header">
+        <div class="predict-title">📊 Κάνε Πρόβλεψη</div>
+        <button id="close-panel-btn" onclick="togglePanel()">×</button>
+      </div>
 
-<div id="layer-panel">
-  <h4>📌 Επιλογή Επιστρώσεων</h4>
-  <div id="layer-options"></div>
-</div>
+      <div class="predict-grid">
+        <div class="field">
+          <label for="depsm">Βάθος (depsm)</label>
+          <input id="depsm" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="conductivity_s_per_m">Αγωγιμότητα (conductivity_s_per_m)</label>
+          <input id="conductivity_s_per_m" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="secchi_depth_m">Διαφάνεια (secchi_depth_m)</label>
+          <input id="secchi_depth_m" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="dissolved_oxygen_mgl">Διαλυμένο Οξυγόνο (dissolved_oxygen_mgl)</label>
+          <input id="dissolved_oxygen_mgl" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="tv290c">Θερμοκρασία (tv290c)</label>
+          <input id="tv290c" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="ph">pH</label>
+          <input id="ph" type="number" step="any" class="input">
+        </div>
+        <div class="field">
+          <label for="dissolved_oxygen_pct">Ποσοστό διαλυμένου Οξυγόνου (dissolved_oxygen_pct)</label>
+          <input id="dissolved_oxygen_pct" type="number" step="any" class="input">
+        </div>
+      </div>
 
+      <div class="actions">
+        <button class="btn-primary" onclick="makePrediction()">🔍 Πρόβλεψη</button>
+        <div id="prediction-result" class="result"></div>
+      </div>
+    </div>
+  </div>
 
-
-<button id="open-panel-btn" onclick="togglePanel()">🔍 Πρόβλεψη</button>
-<div id="predict-panel">
-  <button id="close-panel-btn" onclick="togglePanel()">×</button>
-  <h3>📊 Κάνε Πρόβλεψη</h3>
-  <label>Βάθος (depsm): <input id="depsm" type="number" step="any"></label>
-  <label>Αγωγιμότητα (conductivity_s_per_m): <input id="conductivity_s_per_m" type="number" step="any"></label>
-  <label>Διαφάνεια (secchi_depth_m): <input id="secchi_depth_m" type="number" step="any"></label>
-  <label>Διαλυμένο Οξυγόνο (dissolved_oxygen_mgl): <input id="dissolved_oxygen_mgl" type="number" step="any"></label>
-  <label>Θερμοκρασία (tv290c): <input id="tv290c" type="number" step="any"></label>
-  <label>ph (pH): <input id="ph" type="number" step="any"></label>
-  <label>Ποσοστό διαλυμένου Οξυγόνου (dissolved_oxygen_pct): <input id="dissolved_oxygen_pct" type="number" step="any"></label>
-  <button onclick="makePrediction()">🔍 Πρόβλεψη</button>
-  <div id="prediction-result" style="margin-top: 10px; font-weight: bold;"></div>
-</div> 
-</div>
-        
-
-
-  <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-   
-   
   <script src="beaches.js"></script>
   <script>
     function togglePanel() {
-  document.getElementById("predict-panel").classList.toggle("open");
-}
-  
+      document.getElementById("predict-panel").classList.toggle("open");
+    }
 
-function toggleLayerPanel() {
-        const panel = document.getElementById("layer-panel");
-        panel.style.display = panel.style.display === "block" ? "none" : "block";
-        }
-  const map = L.map('map').setView([40.5, 23.0], 8);
+    function toggleLayerPanel() {
+      const panel = document.getElementById("layer-panel");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18
-  }).addTo(map);
+    const map = L.map('map').setView([40.5, 23.0], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-  const overlays = {};
- // const layerControl = L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+    const overlays = {};
+    const heatmaps = [
+      { file: 'data/thermokrasia_heatmap.geojson', label: 'Θερμοκρασία', property: 'thermokrasia' },
+      { file: 'data/ph_heatmap.geojson', label: 'pH', property: 'ph' },
+      { file: 'data/olika_aioroumena_sterea_heatmap.geojson', label: 'Ολικά Αιωρούμενα Στερεά', property: 'olika_aioroumena_sterea' },
+      { file: 'data/pososto_koresmou_do_heatmap.geojson', label: 'Ποσοστό κορεσμένου DO', property: 'pososto_koresmou_do' },
+      { file: 'data/dialumeno_oksugono_heatmap.geojson', label: 'Διαλυμένο Οξυγόνο DO', property: 'dialumeno_oksugono_do' },
+      { file: 'data/bario_heatmap.geojson', label: 'Βάριο', property: 'bario_ba' },
+      { file: 'data/kadmio_heatmap.geojson', label: 'Κάδμιο', property: 'kadmio_cd' },
+      { file: 'data/kobaltio_heatmap.geojson', label: 'Κοβάλτιο', property: 'kobaltio_co' },
+      { file: 'data/xromio_heatmap.geojson', label: 'Χρώμιο', property: 'xromio_cr' },
+      { file: 'data/xalkos_heatmap.geojson', label: 'Χαλκός', property: 'xalkos_cu' },
+      { file: 'data/magganio_heatmap.geojson', label: 'Μαγγάνιο', property: 'magganio_mn' },
+      { file: 'data/nikelio_heatmap.geojson', label: 'Νικέλιο', property: 'nikelio_ni' },
+      { file: 'data/molyvdos_heatmap.geojson', label: 'Μόλυβδος', property: 'molyvdos_pb' },
+      { file: 'data/pseydargyros_heatmap.geojson', label: 'Ψευδάργυρος', property: 'pseydargyros_zn' },
+      { file: 'data/ydrogonanthrakes_heatmap.geojson', label: 'Υδρογονάνθρακες', property: 'ydrogonanthrakes_c10_c40' },
+      { file: 'data/arseniko_heatmap.geojson', label: 'Αρσενικό', property: 'arseniko_as' }
+    ];
 
-  // 🔁 Ορισμός heatmaps με path και όνομα μεταβλητής
-  const heatmaps = [
-    { file: 'data/thermokrasia_heatmap.geojson', label: 'Θερμοκρασία', property: 'thermokrasia' },
-    { file: 'data/ph_heatmap.geojson', label: 'pH', property: 'ph' },
-    { file: 'data/olika_aioroumena_sterea_heatmap.geojson', label: 'Ολικά Αιωρούμενα Στερεά', property: 'olika_aioroumena_sterea' },
-    { file: 'data/pososto_koresmou_do_heatmap.geojson', label: 'Ποσοστό κορεσμένου DO', property: 'pososto_koresmou_do' },
-    { file: 'data/dialumeno_oksugono_heatmap.geojson', label: 'Διαλυμένο Οξυγόνο DO', property: 'dialumeno_oksugono_do' },
-    { file: 'data/bario_heatmap.geojson', label: 'Βάριο', property: 'bario_ba' },
-    { file: 'data/kadmio_heatmap.geojson', label: 'Κάδμιο', property: 'kadmio_cd' },
-    { file: 'data/kobaltio_heatmap.geojson', label: 'Κοβάλτιο', property: 'kobaltio_co' },
-    { file: 'data/xromio_heatmap.geojson', label: 'Χρώμιο', property: 'xromio_cr' },
-    { file: 'data/xalkos_heatmap.geojson', label: 'Χαλκός', property: 'xalkos_cu' },
-    { file: 'data/magganio_heatmap.geojson', label: 'Μαγγάνιο', property: 'magganio_mn' },
-    { file: 'data/nikelio_heatmap.geojson', label: 'Νικέλιο', property: 'nikelio_ni' },
-    { file: 'data/molyvdos_heatmap.geojson', label: 'Μόλυβδος', property: 'molyvdos_pb' },
-    { file: 'data/pseydargyros_heatmap.geojson', label: 'Ψευδάργυρος', property: 'pseydargyros_zn' },
-    { file: 'data/ydrogonanthrakes_heatmap.geojson', label: 'Υδρογονάνθρακες', property: 'ydrogonanthrakes_c10_c40' },
-    { file: 'data/arseniko_heatmap.geojson', label: 'Αρσενικό', property: 'arseniko_as' }
-  ];
-
-  // 🔁 Για κάθε heatmap, φόρτωσέ το
-heatmaps.forEach(hm => {
-  fetch(hm.file)
-    .then(res => res.json())
-    .then(data => {
-      const heatPoints = data.features.map(f => {
-        const coords = f.geometry.coordinates;
-        const intensity = f.properties[hm.property] || 0;
-        return [coords[1], coords[0], intensity];
-      });
-
-      const layer = L.heatLayer(heatPoints, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 12,
-        gradient: hm.gradient || {
-          0.2: "blue",
-          0.4: "lime",
-          0.6: "yellow",
-          0.8: "orange",
-          1.0: "red"
-        }
-      });
-
-      // ✅ Εδώ βάζεις το κομμάτι για custom checkbox αντί για layerControl.addOverlay
-      overlays[hm.label] = layer;
-
-      // Δημιουργία checkbox στο panel
-      const container = document.getElementById("layer-options");
-      const div = document.createElement("div");
-      div.className = "layer-option";
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = `chk-${hm.label}`;
-      checkbox.onchange = function () {
-        if (this.checked) {
-          map.addLayer(layer);
-        } else {
-          map.removeLayer(layer);
-        }
-      };
-
-      const label = document.createElement("label");
-      label.htmlFor = `chk-${hm.label}`;
-      label.innerText = hm.label;
-
-      div.appendChild(checkbox);
-      div.appendChild(label);
-      container.appendChild(div);
-    });
-});
-  // Προσθήκη GeoJSON σημείων
-  fetch('data/syntetagmenes_full.geojson')
-    .then(res => res.json())
-    .then(data => {
-      L.geoJSON(data, {
-        onEachFeature: (feature, layer) => {
-          const p = feature.properties;
-
-          let popup = `<b>Ακτή:</b> ${p.onoma_aktis || 'Άγνωστη'}<br>`;
-          popup += `<b>Κατηγορία Ποιότητας:</b> ${p.metriseis_katigoria_poiotitas || 'Χωρίς τιμή'}<br>`;
-          popup += `<b>Ημερομηνία:</b> ${p.metriseis_imerominia || 'Χωρίς ημερομηνία'}<br><hr>`;
-
-          const fields = [
-            'conc_ec', 'conc_ie', 'wind_direction',
-            'other_pollution', 'tar_residue', 'glasses',
-            'plastics', 'rubber', 'other_waste',
-            'presence_of_algae', 'presence_of_oil'
-          ];
-
-          fields.forEach(key => {
-            const fullKey = `metriseis_${key}`;
-            const value = p[fullKey];
-            if (value !== undefined && value !== null) {
-              const label = key.replaceAll('_', ' ');
-              popup += `<b>${label}:</b> ${value}<br>`;
-            }
+    heatmaps.forEach(hm => {
+      fetch(hm.file)
+        .then(res => res.json())
+        .then(data => {
+          const heatPoints = data.features.map(f => {
+            const coords = f.geometry.coordinates;
+            const intensity = f.properties[hm.property] || 0;
+            return [coords[1], coords[0], intensity];
           });
 
-          layer.bindPopup(popup);
-        }
-      }).addTo(map);
-    });
-    
+          const layer = L.heatLayer(heatPoints, {
+            radius: 25,
+            blur: 15,
+            maxZoom: 12,
+            gradient: hm.gradient || { 0.2: "blue", 0.4: "lime", 0.6: "yellow", 0.8: "orange", 1.0: "red" }
+          });
 
-    //SEARCH BAR
-     
+          overlays[hm.label] = layer;
+
+          const container = document.getElementById("layer-options");
+          const row = document.createElement("label");
+          row.className = "layer-row";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "layer-name";
+          nameSpan.textContent = hm.label;
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "switch";
+          checkbox.id = `chk-${hm.label}`;
+          checkbox.onchange = function () {
+            if (this.checked) { map.addLayer(layer); }
+            else { map.removeLayer(layer); }
+          };
+
+          row.appendChild(nameSpan);
+          row.appendChild(checkbox);
+          container.appendChild(row);
+        });
+    });
+
+    // ---- ΝΕΟ: ορισμός μπλε/πράσινου icon και εναλλαγή στο κλικ ----
+    const defaultIcon = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+        // Όταν γίνεται click σε κενό σημείο του χάρτη
+    map.on('click', (e) => {
+      if (activeMarker) {
+        activeMarker.setIcon(defaultIcon);
+        activeMarker = null;
+      }
+    });
+
+
+    const selectedIcon = L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    let activeMarker = null;
+
+    fetch('data/syntetagmenes_full.geojson')
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, {
+          pointToLayer: (feature, latlng) => L.marker(latlng, { icon: defaultIcon }),
+          onEachFeature: (feature, layer) => {
+            const p = feature.properties;
+
+            let popup = `<b>Ακτή:</b> ${p.onoma_aktis || 'Άγνωστη'}<br>`;
+            popup += `<b>Κατηγορία Ποιότητας:</b> ${p.metriseis_katigoria_poiotitas || 'Χωρίς τιμή'}<br>`;
+            popup += `<b>Ημερομηνία:</b> ${p.metriseis_imerominia || 'Χωρίς ημερομηνία'}<br><hr>`;
+
+            const fields = [
+              'conc_ec', 'conc_ie', 'wind_direction',
+              'other_pollution', 'tar_residue', 'glasses',
+              'plastics', 'rubber', 'other_waste',
+              'presence_of_algae', 'presence_of_oil'
+            ];
+
+            fields.forEach(key => {
+              const fullKey = `metriseis_${key}`;
+              const value = p[fullKey];
+              if (value !== undefined && value !== null) {
+                const label = key.replaceAll('_', ' ');
+                popup += `<b>${label}:</b> ${value}<br>`;
+              }
+            });
+
+            layer.bindPopup(popup);
+
+            layer.on('click', () => {
+              if (activeMarker) activeMarker.setIcon(defaultIcon);
+              layer.setIcon(selectedIcon);
+              activeMarker = layer;
+            });
+          }
+        }).addTo(map);
+      });
+
     const searchInput = document.getElementById("search");
     const suggestionsDiv = document.getElementById("suggestions");
 
@@ -388,13 +431,8 @@ heatmaps.forEach(hm => {
       map.setView([40.64, 22.94], 9, { animate: true, duration: 1 });
       const value = searchInput.value.toLowerCase().trim();
       suggestionsDiv.innerHTML = "";
-
       if (value.length < 2) return;
-
-      const matches = beaches.filter(beach =>
-        beach.name.toLowerCase().includes(value)
-      );
-
+      const matches = beaches.filter(beach => beach.name.toLowerCase().includes(value));
       matches.forEach(beach => {
         const div = document.createElement("div");
         div.className = "autocomplete-item";
@@ -403,7 +441,6 @@ heatmaps.forEach(hm => {
           searchInput.value = beach.name;
           suggestionsDiv.innerHTML = "";
           map.setView([beach.lat, beach.lon], 16);
-          //L.popup().setLatLng([beach.lat, beach.lon]).setContent(`<strong>${beach.name}</strong>`).openOn(map);
         };
         suggestionsDiv.appendChild(div);
       });
@@ -421,39 +458,34 @@ heatmaps.forEach(hm => {
       searchInput.focus();
     }
 
-    //SEARCHBAR
     function makePrediction() {
-  const data = {
-    depsm: parseFloat(document.getElementById("depsm").value) || 0,
-    conductivity_s_per_m: parseFloat(document.getElementById("conductivity_s_per_m").value) || 0,
-    secchi_depth_m: parseFloat(document.getElementById("secchi_depth_m").value) || 0,
-    dissolved_oxygen_mgl: parseFloat(document.getElementById("dissolved_oxygen_mgl").value) || 0,
-    tv290c: parseFloat(document.getElementById("tv290c").value) || 0,
-    ph: parseFloat(document.getElementById("ph").value) || 0,
-    dissolved_oxygen_pct: parseFloat(document.getElementById("dissolved_oxygen_pct").value) || 0
-    
-  };
+      const data = {
+        depsm: parseFloat(document.getElementById("depsm").value) || 0,
+        conductivity_s_per_m: parseFloat(document.getElementById("conductivity_s_per_m").value) || 0,
+        secchi_depth_m: parseFloat(document.getElementById("secchi_depth_m").value) || 0,
+        dissolved_oxygen_mgl: parseFloat(document.getElementById("dissolved_oxygen_mgl").value) || 0,
+        tv290c: parseFloat(document.getElementById("tv290c").value) || 0,
+        ph: parseFloat(document.getElementById("ph").value) || 0,
+        dissolved_oxygen_pct: parseFloat(document.getElementById("dissolved_oxygen_pct").value) || 0
+      };
 
-
-  fetch("http://localhost:5000/predict", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(res => {
-    document.getElementById("prediction-result").innerHTML =
-      `✅ Πρόβλεψη: <span style="color: green;">${res.prediction.toFixed(3)}</span>`;
-  })
-  .catch(err => {
-    document.getElementById("prediction-result").innerHTML =
-      `❌ Σφάλμα στην πρόβλεψη.`;
-    console.error(err);
-  });
-}
-</script>
-
+      fetch("http://localhost:5000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(res => {
+        const el = document.getElementById("prediction-result");
+        el.classList.remove("error");
+        el.textContent = `✅ Πρόβλεψη: ${res.prediction.toFixed(3)}`;
+      })
+      .catch(() => {
+        const el = document.getElementById("prediction-result");
+        el.classList.add("error");
+        el.textContent = `❌ Σφάλμα στην πρόβλεψη.`;
+      });
+    }
+  </script>
 </body>
 </html>
